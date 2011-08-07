@@ -16,7 +16,7 @@
 #include "datatype.h"
 #include "snake.h"
 #include "area.h"
-
+#include "timer.h"
 
 //#define GC_KEYDOWN 1
 //#define GC_KEYUP 2
@@ -24,6 +24,13 @@
 
 #ifndef GAMECONTROLLER_H_
 #define GAMECONTROLLER_H_
+
+typedef LARGE_INTEGER winlarge;
+
+enum TypeLoop {
+	FIXED_FPS,
+	DYNAMIC_FPS
+};
 
 namespace GController
 {
@@ -38,9 +45,9 @@ namespace GController
 		snake *playerSnake;
 		area *curLevel;
 
-		xyz playerPos;
-		xyz fruitPos;
-		xyz direction;
+		txyz playerPos;
+		txyz fruitPos;
+		txyz direction;
 
 		bool arrowPressed;
 		bool gamePaused;
@@ -53,6 +60,9 @@ namespace GController
 		double frame_time;
 
 		void spawnFruit(int,int,int); //spawn fruit in range
+
+		Timer loopTimer;
+		TypeLoop fpsUpdateType;
 
 	public:
 		gameController(HINSTANCE hInst);
