@@ -11,10 +11,11 @@
 
 class winapiwrapper;
 
-typedef int (winapiwrapper::*tyMessageHandler)(HWND, long, long);	//тип tyMessageHandler -- функция, возвращающая long
-typedef std::map<long, tyMessageHandler> tyMessageMap;					//тип tyMessageMap -- ассоциативный список Событий и привязанных к ним обрабтчиков
-typedef tyMessageMap::iterator tyMessageIterator;						//тип tyMessageIterator -- итератор map списка tyMessageMap
+
 typedef bool (*tyCallBack)(int,long,long);
+typedef int (winapiwrapper::* tyMessageHandler)(HWND, long, long); //тип tyMessageHandler -- функция, возвращающая long
+typedef std::map<long, tyMessageHandler> tyMessageMap;     //тип tyMessageMap -- ассоциативный список Событий и привязанных к ним обрабтчиков
+typedef tyMessageMap::iterator tyMessageIterator;      //тип tyMessageIterator -- итератор map списка tyMessageMap
 
 class winapiwrapper
 {
