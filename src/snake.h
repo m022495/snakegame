@@ -16,7 +16,6 @@ private:
 	snakeCell *last;
 
 	int snakeLength;
-	
 
 public:
 	//snake(void);
@@ -24,7 +23,7 @@ public:
 	//snake(crdXYZ startPos);
 	~snake(void);
 	void add();
-	void move(xyz direction);
+	void move(txyz direction);
 	void move(int x, int y, int z);
 
 	const snakeCell *getHead() {return head;}

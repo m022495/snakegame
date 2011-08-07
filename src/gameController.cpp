@@ -7,12 +7,15 @@
 #include <iostream>
 #include "gameController.h"
 
+#define fixedFPS 60
 #define FRAMES_PER_STEP 8
 
 #define X_ 0
 #define Y_ 1
 #define Z_ 2
 
+void loadBand(int n);
+void waiter(long wticks);
 
 namespace GController
 {
@@ -30,7 +33,8 @@ namespace GController
 				animooted(true),
 				start_tick(0),
 				end_tick(0),
-				frame_time(0)
+				frame_time(0),
+				fpsUpdateType(FIXED_FPS)
 	{
 
 		OutputDebugString("aaa");
@@ -49,7 +53,7 @@ namespace GController
 		fruitPos[Y_] = -1;
 		fruitPos[Z_] = -1;
 
-		 srand ( time(NULL) );
+		srand (time(NULL));
 	}
 
 	gameController::~gameController()
@@ -263,92 +267,104 @@ namespace GController
 
 	void gameController::mainloop()
 	{
+		//FPS counter
+		loopTimer.start();
 
-			opengl->begindraw();
-			opengl->drawAxis();
-			opengl->drawCube(0,0,0);
+		opengl->begindraw();
+		//opengl->drawAxis();
+		//opengl->drawCube(0,0,0);
 
-			//logic moving the snake
+		//logic moving the snake
 
-			if (frames == FRAMES_PER_STEP)	//if new step started
-			{
-				//do move
+		if (frames == FRAMES_PER_STEP)	//if new step started
+		{
+			//do move
 
-				playerPos[X_] += direction[X_];	//move the snake head
-				playerPos[Y_] += direction[Y_];
-				playerPos[Z_] += direction[Z_];
+			playerPos[X_] += direction[X_];	//move the snake head
+			playerPos[Y_] += direction[Y_];
+			playerPos[Z_] += direction[Z_];
 
-				playerSnake->move(direction);	//move the tail
+			playerSnake->move(direction);	//move the tail
 
-				frames = 0;	
-				arrowPressed = false;
-			}
+			frames = 0;	
+			arrowPressed = false;
+		}
 			
-			if(playerPos[X_] == fruitPos[X_] &&		//if the fruit hit
-				playerPos[Y_] == fruitPos[Y_] && 
-				playerPos[Z_] == fruitPos[Z_])
-			{
-				playerSnake->add();	//add body cell
-				spawnFruit(10,0,10);
-			}
+		if(playerPos[X_] == fruitPos[X_] &&		//if the fruit hit
+			playerPos[Y_] == fruitPos[Y_] && 
+			playerPos[Z_] == fruitPos[Z_])
+		{
+			playerSnake->add();	//add body cell
+			spawnFruit(10,0,10);
+		}
 
-			//drawing the snake hear
+		//drawing the snake hear
 
-			if(!fixCamera)	//follow the snake head by the camera or set camera to the def points
-				opengl->setCameraCellDelta(
-										playerPos[X_], playerPos[Y_], playerPos[Z_], 
-										direction[X_] * (float)frames/FRAMES_PER_STEP,
-										direction[Y_] * (float)frames/FRAMES_PER_STEP,
-										direction[Z_] * (float)frames/FRAMES_PER_STEP,
-										direction[X_], direction[Y_], direction[Z_]
-										);
+		if(!fixCamera)	//follow the snake head by the camera or set camera to the def points
+			opengl->setCameraCellDelta(
+									playerPos[X_], playerPos[Y_], playerPos[Z_], 
+									direction[X_] * (float)frames/FRAMES_PER_STEP,
+									direction[Y_] * (float)frames/FRAMES_PER_STEP,
+									direction[Z_] * (float)frames/FRAMES_PER_STEP,
+									direction[X_], direction[Y_], direction[Z_]
+									);
 
-			opengl->drawCubeCellsDelta(			//snake head
-										playerPos[X_], 
-										playerPos[Y_], 
-										playerPos[Z_],
-										direction[X_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),//animate if enabled
-										direction[Y_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
-										direction[Z_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
-										);
-			
+		opengl->drawCubeCellsDelta(			//snake head
+									playerPos[X_], 
+									playerPos[Y_], 
+									playerPos[Z_],
+									direction[X_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),//animate if enabled
+									direction[Y_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
+									direction[Z_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
+									);	
 
-			//draw snake body
-			xyz prev = { playerPos[X_],  playerPos[Y_],  playerPos[Z_]};
-			const snakeCell *next = playerSnake->getHead()->next;
+		//draw snake body
+		txyz prev = { playerPos[X_],  playerPos[Y_],  playerPos[Z_]};
+		const snakeCell *next = playerSnake->getHead()->next;
 
-			//go thru the linked list
-			while(next)
-			{
+		//go thru the linked list
+		while(next)
+		{
 				
-				prev[X_] -= next->move.x;
-				prev[Y_] -= next->move.y;
-				prev[Z_] -= next->move.z;
+			prev[X_] -= next->move.x;
+			prev[Y_] -= next->move.y;
+			prev[Z_] -= next->move.z;
 
-				//draw each body part
-				opengl->drawCubeCellsDelta(
-						prev[X_],
-						prev[Y_],
-						prev[Z_],
-						next->move.x*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),	//animate if enabled
-						next->move.y*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
-						next->move.z*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
-					);
+			//draw each body part
+			opengl->drawCubeCellsDelta(
+					prev[X_],
+					prev[Y_],
+					prev[Z_],
+					next->move.x*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),	//animate if enabled
+					next->move.y*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
+					next->move.z*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
+				);
 
-				next = playerSnake->getNext(next);
-			}
+			next = playerSnake->getNext(next);
+		}
 			
-			//draw the fruit
-			if(fruitPos[X_] != -1)
-			{
-				opengl->drawCubeCells(fruitPos[X_], fruitPos[Y_], fruitPos[Z_]);	
-			}
+		//draw the fruit
+		if(fruitPos[X_] != -1)
+		{
+			opengl->drawCubeCells(fruitPos[X_], fruitPos[Y_], fruitPos[Z_]);	
+		}
 
-			frames++;
+		frames++;
+		//loadBand(2000);
+		opengl->enddraw();
 
-			opengl->enddraw();
+		//wait until fixed frame time is reached
+		float fps = (float)loopTimer.getTicksRate().QuadPart/loopTimer.getTime().QuadPart;
+	
+		if(fps > fixedFPS)
+		{
+			waiter(long(loopTimer.getTicksRate().QuadPart/fixedFPS - loopTimer.getTime().QuadPart));
+		}
 
-			//std::cout<<"aaaa";
+		//fps = (float)loopTimer.getTicksRate().QuadPart/loopTimer.getTime().QuadPart;
+		//std::cout<<fps<<std::endl;
+
+		loopTimer.reset();
 	}
 
 	void gameController::spawnFruit(int xr, int yr, int zr)
@@ -360,3 +376,27 @@ namespace GController
 
 }
 
+//just waste cpu time
+void loadBand(int n)
+{
+	for(int i=50;i<50+n;i++)
+	{
+			for(int j=30;j<30+n;j++)
+			{
+				int x = rand();
+			}
+	}
+}
+
+//wait wticks ticks
+void waiter(long wticks)
+{
+	if(wticks <= 0)
+		return;
+
+	Timer wtimer;
+	wtimer.start();
+
+	do{} while( wtimer.getTime().QuadPart < wticks );
+
+}

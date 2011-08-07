@@ -46,11 +46,10 @@ void snake::move(int x, int y, int z)
 		cell = cell->prev;
 	}
 
-
 }
 
 
-void snake::move(xyz direction)
+void snake::move(txyz direction)
 {
 	move(direction[_IX], direction[_IY], direction[_IZ]);
 }
