@@ -24,11 +24,9 @@
   <ItemGroup>
     <ClCompile Include="..\src\area.cpp" />
     <ClCompile Include="..\src\gameController.cpp" />
-    <ClCompile Include="..\src\maintest.cpp" />
     <ClCompile Include="..\src\opengltest2.cpp" />
     <ClCompile Include="..\src\openglwrapper.cpp" />
     <ClCompile Include="..\src\snake.cpp" />
-    <ClCompile Include="..\src\snakeclasstest.cpp" />
     <ClCompile Include="..\src\winapiwrapper.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
