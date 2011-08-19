@@ -11,6 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\mmatrix\mmatrix\matrix_3dvector.h" />
+    <ClInclude Include="..\..\mmatrix\mmatrix\matrix_container.h" />
+    <ClInclude Include="..\..\mmatrix\mmatrix\matrix_rotation_matrix.h" />
+    <ClInclude Include="..\..\mmatrix\mmatrix\mmatrix.h" />
     <ClInclude Include="..\src\area.h" />
     <ClInclude Include="..\src\datatype.h" />
     <ClInclude Include="..\src\gameController.h" />
@@ -61,11 +65,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\game\dev\openglsnake\openglsnake;$(IncludePath)</IncludePath>
-    <SourcePath>C:\game\dev\openglsnake\openglsnake;$(SourcePath)</SourcePath>
+    <IncludePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openglsnake\openglsnake;$(IncludePath)</IncludePath>
+    <SourcePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openglsnake\openglsnake;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>C:\game\dev\mmatrix\mmatrix;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <SourcePath>$(SourcePath)</SourcePath>

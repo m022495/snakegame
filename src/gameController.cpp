@@ -8,14 +8,15 @@
 #include "gameController.h"
 
 #define fixedFPS 60
-#define FRAMES_PER_STEP 8
+#define FRAMES_PER_STEP 12
+#define CAMERA_STEPS 7
+#define PI 3.1415926536f
 
-#define X_ 0
-#define Y_ 1
-#define Z_ 2
+#define CAMDEFX 10
+#define CAMDEFY 10
+#define CAMDEFZ 10
 
-void loadBand(int n);
-void waiter(long wticks);
+
 
 namespace GController
 {
@@ -31,29 +32,19 @@ namespace GController
 				gamePaused(false),
 				fixCamera(true),
 				animooted(true),
-				start_tick(0),
-				end_tick(0),
-				frame_time(0),
-				fpsUpdateType(FIXED_FPS)
+				direction(1,0,0),
+				prevdirection(direction),
+				playerPos(0,0,0),
+				fruitPos(-1,-1,-1),
+				cameraPos(CAMDEFX,CAMDEFY,CAMDEFZ),
+				cameraframes(0),
+				cameraRot(0,0,0),
+				xRelRot(0,0,0)
 	{
 
-		OutputDebugString("aaa");
+
 		selfptr = this;
-
-		direction[X_] = 1;	//x vector {1,0,0}
-		direction[Y_] = 0;
-		direction[Z_] = 0;
-
-		//initial position
-		playerPos[X_] = 0;
-		playerPos[Y_] = 0;
-		playerPos[Z_] = 0;
-
-		fruitPos[X_] = -1;
-		fruitPos[Y_] = -1;
-		fruitPos[Z_] = -1;
-
-		srand (time(NULL));
+	//	srand (time((time_t)NULL));
 	}
 
 	gameController::~gameController()
@@ -65,20 +56,22 @@ namespace GController
 	bool gameController::init()
 	{
 		window = new winapiwrapper(hInstance);
-		playerSnake = new snake(1,0,0);
-		curLevel = new area(50,50,50);
-		spawnFruit(10,0,10);
+		playerSnake = new snake(direction, playerPos);
+
+		spawnFruit(10,10,0);
 		playerSnake->add();
 		playerSnake->add();
 
 		try
 		{
-			window->createWindow(300,300,500,500);
+			window->createWindow(700,200,700,700);
 			window->WshowWindow();
 			window->setCallBack(&gameController::callBack);
 
 			opengl = new openglwrapper(window->getHDC());
 			opengl->EnableOpenGL(window->getHWND());
+			opengl->initCamera(cameraPos.x(), cameraPos.y(),cameraPos.z());
+
 		}
 		catch ( std::exception &e )
 		{
@@ -88,6 +81,27 @@ namespace GController
 
 		return true;
 
+	}
+
+	void gameController::restartGame()
+	{
+		delete playerSnake;
+		playerSnake = 0;
+
+		direction.set(1,0,0);
+		playerPos.set(0,0,0);
+
+		playerSnake = new snake(direction, playerPos);
+		playerSnake->add();
+		playerSnake->add();
+
+		spawnFruit(10,10,0);
+
+		animooted = true;
+		gamePaused = false;
+		fixCamera = false;
+		
+		xRelRot.setAngle(0,0,0);
 	}
 
 	void gameController::go()
@@ -107,7 +121,15 @@ namespace GController
 			else
 			{
 				//main game loop
+				loopTimer.start();
+
 				mainloop();
+
+				float fps = (float)loopTimer.getTicksRate().QuadPart/loopTimer.getTime().QuadPart;
+				if	(fps > fixedFPS)
+					waiter(long(loopTimer.getTicksRate().QuadPart/fixedFPS - loopTimer.getTime().QuadPart));
+
+				loopTimer.reset();
 			}
 		}
 
@@ -127,68 +149,76 @@ namespace GController
 
 		if (type == WM_KEYDOWN)
 		{
+			Vector3i xvect(1,0,0);
+
 			switch (param0)
 			{
-
 				case(VK_UP):
-
 					if(!arrowPressed)
 					{
-						direction[X_] = 1;
-						direction[Y_] = 0;
-						direction[Z_] = 0;
+						
+						RotMatrix3f rot_up(0, PI/2, 0);
+						xRelRot = rot_up*xRelRot;	
+						xvect *= xRelRot;
 
+						direction = xvect;
+						
+						cameraframes = 1;
 						arrowPressed = true;
 					}
-
 				break;
 
 				case(VK_DOWN):
-
 					if(!arrowPressed)
 					{
-						direction[X_] = -1;
-						direction[Y_] = 0;
-						direction[Z_] = 0;
+						RotMatrix3f rot_down(0, -PI/2, 0);
+						xRelRot = rot_down*xRelRot;	
+						xvect *= xRelRot;
 
+						direction = xvect;
+						
+						cameraframes = 1;
 						arrowPressed = true;
 					}
-
 				break;
 
 				case(VK_LEFT):
 					if(!arrowPressed)
 					{
-						direction[X_] = 0;
-						direction[Y_] = 0;
-						direction[Z_] = -1;
+						
+						RotMatrix3f rot_left(0, 0, -PI/2);
+						xRelRot = rot_left*xRelRot;	
+						xvect *= xRelRot;
+						
+						direction = xvect;
 
+						cameraframes = 1;
 						arrowPressed = true;
 					}
 				break;
 
 				case(VK_RIGHT):
 					if(!arrowPressed)
-					{
-						direction[X_] = 0;
-						direction[Y_] = 0;
-						direction[Z_] = 1;
+					{		
 
+						RotMatrix3f rot_right(0, 0, PI/2);
+						xRelRot = rot_right*xRelRot;	
+						xvect *= xRelRot;
+
+						direction = xvect;
+
+						cameraframes = 1;
 						arrowPressed = true;
 					}
 
 				break;
 
 				case(VK_HOME):
-					direction[X_] = 0;
-					direction[Y_] = 1;
-					direction[Z_] = 0;
+					direction.set(0,1,0);
 				break;
 
 				case(VK_END):
-					direction[X_] = 0;
-					direction[Y_] = -1;
-					direction[Z_] = 0;
+					direction.set(0,-1,0);
 				break;
 
 				case(VK_SPACE):
@@ -202,48 +232,25 @@ namespace GController
 				case(0x43):
 					if(!fixCamera) 
 					{
-						opengl->initCamera();
+						cameraPos.set(CAMDEFX, CAMDEFY, CAMDEFZ);
+						opengl->initCamera(cameraPos.z(), cameraPos.y(), cameraPos.z());
 						fixCamera = true;
 					}
 					else
 						fixCamera = false;
 				break;
 
-				case(VK_NUMPAD8):
-					opengl->setYSpeed(1.0f);
-				break;
-
-				case(VK_NUMPAD2):
-					opengl->setYSpeed(-1.0f);
-				break;
-
-				case(VK_NUMPAD4):
-					opengl->setZSpeed(1.0f);
-				break;
-
-				case(VK_NUMPAD6):
-					opengl->setZSpeed(-1.0f);
-				break;
-
-				case(VK_NUMPAD7):
-					opengl->setXSpeed(1.0f);
-				break;
-
-				case(VK_NUMPAD9):
-					opengl->setXSpeed(-1.0f);
-				break;
-
-				case(VK_NUMPAD5):
-					opengl->setXSpeed(0.0f);
-					opengl->setYSpeed(0.0f);
-					opengl->setZSpeed(0.0f);
-				break;
-
 				case(VK_ESCAPE):
 					opengl->DisableOpenGL();
 					window->quit();
 				break;
+
+				case(VK_F1):
+					restartGame();
+				break;
+
 			}
+			direction.output();
 		}
 		if (type == WM_SIZE)
 		{
@@ -267,136 +274,184 @@ namespace GController
 
 	void gameController::mainloop()
 	{
-		//FPS counter
-		loopTimer.start();
 
-		opengl->begindraw();
-		//opengl->drawAxis();
-		//opengl->drawCube(0,0,0);
-
-		//logic moving the snake
-
-		if (frames == FRAMES_PER_STEP)	//if new step started
-		{
-			//do move
-
-			playerPos[X_] += direction[X_];	//move the snake head
-			playerPos[Y_] += direction[Y_];
-			playerPos[Z_] += direction[Z_];
-
-			playerSnake->move(direction);	//move the tail
+		if (frames == FRAMES_PER_STEP)
+		{ 
+			//current head position = previos + current moving direction
+			if(!gamePaused)
+			{
+				playerPos += direction;	
+				playerSnake->move(direction);
+				checkCollision();
+			}
 
 			frames = 0;	
 			arrowPressed = false;
 		}
 			
-		if(playerPos[X_] == fruitPos[X_] &&		//if the fruit hit
-			playerPos[Y_] == fruitPos[Y_] && 
-			playerPos[Z_] == fruitPos[Z_])
+				//drawing the frame here
+		
+		begindraw();
+
+		setCamera();
+		drawSnake();
+		drawFruit();
+		opengl->drawAxis(0,0,0);
+		enddraw();
+	
+		//if(cameraframes  == CAMERA_STEPS)
+			//cameraframes = 0;
+		if(cameraframes  <= CAMERA_STEPS && cameraframes>0)
+			cameraframes++;
+
+		frames++;
+		//cameraframes++;
+	}
+	
+
+	void gameController::setCamera()
+	{
+		
+		if(cameraframes == CAMERA_STEPS)
 		{
-			playerSnake->add();	//add body cell
-			spawnFruit(10,0,10);
+			prevdirection = direction;
+			cameraframes = 0;
 		}
 
-		//drawing the snake hear
+		float dfr = (float)frames/FRAMES_PER_STEP;
+		float cfr = (float)cameraframes/CAMERA_STEPS;
 
-		if(!fixCamera)	//follow the snake head by the camera or set camera to the def points
-			opengl->setCameraCellDelta(
-									playerPos[X_], playerPos[Y_], playerPos[Z_], 
-									direction[X_] * (float)frames/FRAMES_PER_STEP,
-									direction[Y_] * (float)frames/FRAMES_PER_STEP,
-									direction[Z_] * (float)frames/FRAMES_PER_STEP,
-									direction[X_], direction[Y_], direction[Z_]
+		cameraPos.set(-8,0,8);
+		//cameraRot
+		Vector3i zvect(0,0,3);
+
+		zvect *= xRelRot;
+		cameraPos *= xRelRot;
+
+		if(!fixCamera)	//(float)frames/FRAMES_PER_STEP
+			opengl->setCamera(	
+									//camera position
+									playerPos.x()+dfr*direction.x()+cameraPos.x(), 
+									playerPos.y()+dfr*direction.y()+cameraPos.y(), 
+									playerPos.z()+dfr*direction.z()+cameraPos.z(), 
+									//aim position
+									playerPos.x()+dfr*direction.x(),
+									playerPos.y()+dfr*direction.y(),
+									playerPos.z()+dfr*direction.z(),
+									//normal to the camera
+									zvect.x(),zvect.y(),zvect.z()
+									//direction.x(), direction.y(), direction.z()
 									);
 
-		opengl->drawCubeCellsDelta(			//snake head
-									playerPos[X_], 
-									playerPos[Y_], 
-									playerPos[Z_],
-									direction[X_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),//animate if enabled
-									direction[Y_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
-									direction[Z_] * (float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
-									);	
+		opengl->drawLine(
+				playerPos.x()+cameraPos.x()+dfr*direction.x(),
+				playerPos.y()+cameraPos.y()+dfr*direction.y(), 
+				playerPos.z()+cameraPos.z()+dfr*direction.z(),
+				playerPos.x()+dfr*direction.x(),
+				playerPos.y()+dfr*direction.y(),
+				playerPos.z()+dfr*direction.z()
+				);
+
+		opengl->drawLine(
+				playerPos.x()+cameraPos.x()+dfr*direction.x(),
+				playerPos.y()+cameraPos.y()+dfr*direction.y(), 
+				playerPos.z()+cameraPos.z()+dfr*direction.z(),
+				playerPos.x()+cameraPos.x()+dfr*direction.x()+zvect.x(),
+				playerPos.y()+cameraPos.y()+dfr*direction.y()+zvect.y(),
+				playerPos.z()+cameraPos.z()+dfr*direction.z()+zvect.z()
+		);
+	}
+
+	void gameController::drawSnake()
+	{
 
 		//draw snake body
-		txyz prev = { playerPos[X_],  playerPos[Y_],  playerPos[Z_]};
-		const snakeCell *next = playerSnake->getHead()->next;
+		Vector3i prev(playerPos);
+		const snakeCell *next = playerSnake->getHead();
 
 		//go thru the linked list
 		while(next)
 		{
-				
-			prev[X_] -= next->move.x;
-			prev[Y_] -= next->move.y;
-			prev[Z_] -= next->move.z;
+			prev -= next->cellGuts.nextmove;
 
 			//draw each body part
 			opengl->drawCubeCellsDelta(
-					prev[X_],
-					prev[Y_],
-					prev[Z_],
-					next->move.x*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),	//animate if enabled
-					next->move.y*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
-					next->move.z*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
+					prev.x(),
+					prev.y(),
+					prev.z(),
+					next->cellGuts.nextmove.x()*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),	//animate if enabled
+					next->cellGuts.nextmove.y()*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
+					next->cellGuts.nextmove.z()*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
 				);
 
 			next = playerSnake->getNext(next);
 		}
-			
-		//draw the fruit
-		if(fruitPos[X_] != -1)
+	}
+
+		void gameController::checkCollision()
+	{
+		if(playerPos == fruitPos)
 		{
-			opengl->drawCubeCells(fruitPos[X_], fruitPos[Y_], fruitPos[Z_]);	
+			//add a body cell
+			playerSnake->add();	
+			spawnFruit(10,10,0);
 		}
 
-		frames++;
-		//loadBand(2000);
-		opengl->enddraw();
-
-		//wait until fixed frame time is reached
-		float fps = (float)loopTimer.getTicksRate().QuadPart/loopTimer.getTime().QuadPart;
-	
-		if(fps > fixedFPS)
+		if(playerSnake->searchPos(playerPos))
 		{
-			waiter(long(loopTimer.getTicksRate().QuadPart/fixedFPS - loopTimer.getTime().QuadPart));
+			std::cout<<"Tail hit."<<std::endl;
+			gamePaused = true;
+			animooted = false;
+			fixCamera = true;
 		}
 
-		//fps = (float)loopTimer.getTicksRate().QuadPart/loopTimer.getTime().QuadPart;
-		//std::cout<<fps<<std::endl;
+		//playerSnake->outputSnake();
+		//
+	}
 
-		loopTimer.reset();
+	void gameController::drawFruit()
+	{
+		if(fruitPos.x() != -1)
+			opengl->drawCubeCells(fruitPos.x(), fruitPos.y(), fruitPos.z());
 	}
 
 	void gameController::spawnFruit(int xr, int yr, int zr)
 	{
-		fruitPos[X_] = (xr!=0)?(int)rand()%xr:0;
-		fruitPos[Y_] = (yr!=0)?(int)rand()%yr:0;
-		fruitPos[Z_] = (zr!=0)?(int)rand()%zr:0;
+		do 
+		{
+			fruitPos.set(
+						(xr!=0)?(int)rand()%xr:0,
+						(yr!=0)?(int)rand()%yr:0,
+						(zr!=0)?(int)rand()%zr:0);
+		} while(playerSnake->searchPos(fruitPos));
 	}
 
-}
 
-//just waste cpu time
-void loadBand(int n)
-{
-	for(int i=50;i<50+n;i++)
+	//just waste cpu time
+	void loadBand(int n)
 	{
-			for(int j=30;j<30+n;j++)
-			{
-				int x = rand();
-			}
+		for(int i=50;i<50+n;i++)
+		{
+				for(int j=30;j<30+n;j++)
+				{
+					int x = rand();
+				}
+		}
+	}
+
+	//wait wticks ticks
+	void waiter(long wticks)
+	{
+		if(wticks <= 0)
+			return;
+
+		Timer wtimer;
+		wtimer.start();
+
+		do{} while( wtimer.getTime().QuadPart < wticks );
+
 	}
 }
 
-//wait wticks ticks
-void waiter(long wticks)
-{
-	if(wticks <= 0)
-		return;
 
-	Timer wtimer;
-	wtimer.start();
 
-	do{} while( wtimer.getTime().QuadPart < wticks );
-
-}

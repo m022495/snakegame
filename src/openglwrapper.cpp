@@ -11,7 +11,7 @@
 
 #define COORDS_RATIO 1.0f		//   gamecoords / openglcoords
 #define	CELL_SIZE COORDS_RATIO * 1.0f
-#define CUBE_EDGE ((CELL_SIZE/2)-0.1f)	
+#define CUBE_EDGE ((CELL_SIZE/2)-0.07f)	
 
 using namespace std;
 
@@ -133,34 +133,10 @@ bool openglwrapper::CreateContext()
 void openglwrapper::begindraw()
 {
 
-
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	//coordinate axis
-	//drawAxis();	
-	//opengl->drawCage(10,10,10);
-
-	//включаем поддержку массивов вершин
 	glEnableClientState(GL_VERTEX_ARRAY);	
-
-	//строка координатных данных для одной вершины занимает 6*GLfloat байт.
 	glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, &cube_verticies[0]);
-	//строка цветовых данных для одной вершины занимает 6*GLfloat байт, начиная с третьего элемента
-	//glColorPointer(3, GL_FLOAT, sizeof(GLfloat)*6, &vertices[3]);
 
-	//рисуем куб 
-
-	if(fXSpeed || fYSpeed || fZSpeed) 
-	{
-		//glPushMatrix();
-		
-		glRotatef( fTriangleTheta, fXSpeed, fYSpeed, fZSpeed );
-		glTranslatef(1.0f,1.0f,1.0f);
-		glPopMatrix();
-	}
-
-	//сменить буферы вывода
-	
 }
 
 void openglwrapper::enddraw()
@@ -206,6 +182,14 @@ void openglwrapper::drawCubeCellsDelta(int x, int y, int z, float dx, float dy, 
 
 }
 
+void openglwrapper::drawCubeCellsDeltaFat(int x, int y, int z, float dx, float dy, float dz, float fat)
+{
+		drawCube((float)x*cellSize +(float)cellSize/2 +(float)dx*cellSize, 
+				 (float)y*cellSize +(float)cellSize/2 +(float)dy*cellSize, 
+				(float)z*cellSize +(float)cellSize/2 +(float)dz*cellSize);
+
+}
+
 void openglwrapper::setCamera(GLfloat cx, GLfloat cy, GLfloat cz,  GLfloat px, GLfloat py, GLfloat pz, int upx, int upy, int upz)
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -227,29 +211,29 @@ void openglwrapper::setCameraCell(int cx, int cy, int cz, int upx, int upy, int 
 {
 		setCamera(
 			cx*cellSize, 
-			cy*cellSize+(30*fzoom), 
-			cz*cellSize, 
+			cy*cellSize, 
+			cz*cellSize+(30*fzoom), 
 		
 			(cx+1)*cellSize, 
 			cy*cellSize, 
 			cz*cellSize,    
 		
-			1, 0, 0);
+			0, 1, 0);
 
 }
 
 void openglwrapper::setCameraCellDelta(int cx, int cy, int cz, float dx, float dy, float dz, int upx, int upy, int upz)
 {
 	setCamera (
-		cx*cellSize+(float)dx*cellSize, 
-		cy*cellSize+(30*fzoom), 
-		cz*cellSize+(float)dz*cellSize, 
+		(cx-5*upx) * cellSize + (float)dx*cellSize, //camera position
+		(cy-5*upy) * cellSize + (float)dy*cellSize, 
+		(cz-5*upz) * cellSize + (5*fzoom), 
 		
-		cx*cellSize+(float)dx*cellSize, 
-		cy*cellSize, 
-		cz*cellSize+(float)dz*cellSize,    
+		cx*cellSize+(float)dx*cellSize,			//point to spectate
+		cy*cellSize+(float)dy*cellSize, 
+		cz*cellSize,    
 		
-		1, 0, 0);
+		upx, upy, upz);
 
 }
 
@@ -267,7 +251,7 @@ void openglwrapper::drawCube(GLfloat x, GLfloat y, GLfloat z)
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, rightIndicies);
 	glColor3f(0.1f, 0, 0.5f);
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, botIndicies);
-	glColor3f(0.6f, 1.0f, 0);
+	glColor3f(0.3f, 0.3f, 0.3f);
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, topIndicies);
 	glColor3f(0.4f, 0.1f, 0.6f);
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, backIndicies);
@@ -275,13 +259,12 @@ void openglwrapper::drawCube(GLfloat x, GLfloat y, GLfloat z)
 	glPopMatrix();
 }
 
-
 void openglwrapper::moveSpawn(GLfloat x, GLfloat y, GLfloat z)
 {
 	glTranslatef(x,y,z);
 }
 
-void openglwrapper::initCamera()
+void openglwrapper::initCamera(float x, float y, float z)
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -289,7 +272,7 @@ void openglwrapper::initCamera()
 		
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt (10.0, 20.0, 15.0,    5, 5, 5,    1.0, 0.0, 0.0);
+	gluLookAt (x, y, z,    0, 0, 0,    0.0, 0.0, 1.0);
 
 }
 
@@ -351,26 +334,36 @@ void openglwrapper::drawCagePlayer(int xs, int ys, int zs, int ppx, int ppy, int
 	glEnd();
 }
 
-void openglwrapper::drawAxis()
+void openglwrapper::drawAxis(float x, float y, float z)
 {
 	glBegin(GL_LINES);
 
 	glColor3f(1.0,0,0);	//red x
-	glVertex3d(0,0,0);
-	glVertex3d(5,0,0);
+	glVertex3d(x-5,y,z);
+	glVertex3d(x+5,y,z);
 
 	glColor3f(0,1.0,0);	//green y
-	glVertex3d(0,0,0);
-	glVertex3d(0,5,0);
+	glVertex3d(x,y-5,z);
+	glVertex3d(x,y+5,z);
 
 	glColor3f(0,0,1.0);	//blue z
-	glVertex3d(0,0,0);
-	glVertex3d(0,0,5);
+	glVertex3d(x,y,z-5);
+	glVertex3d(x,y,z+5);
 
 	glEnd();
 
 	glBegin(GL_POINTS);
 		glVertex3d(0,0,0);
+	glEnd();
+
+}
+
+void openglwrapper::drawLine(float x1, float y1, float z1, float x2, float y2, float z2)
+{
+	glBegin(GL_LINES);
+		glColor3f(0 , 0, 0);
+		glVertex3f(x1,y1,z1);
+		glVertex3f(x2,y2,z2);
 	glEnd();
 
 }
@@ -420,7 +413,7 @@ bool openglwrapper::EnableOpenGL(HWND hWnd)
 	this->hWnd = hWnd;
 
 	initSettings();
-	initCamera();
+	//initCamera();
 
 	return true;
 }
@@ -430,7 +423,7 @@ void openglwrapper::reshape(int width, int height)
 	// задает область просмотра.
 	glViewport(0, 0, (GLsizei) width, (GLsizei) height);
 	initSettings();
-	initCamera();
+	//initCamera();
 }
 
 bool openglwrapper::DisableOpenGL()

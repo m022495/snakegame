@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\mmatrix">
+      <UniqueIdentifier>{270bc532-e206-4291-b167-0c8311d8e9eb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\area.h">
@@ -41,6 +44,18 @@
     </ClInclude>
     <ClInclude Include="..\src\wrapperkeys.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\mmatrix\mmatrix\matrix_container.h">
+      <Filter>Header Files\mmatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\mmatrix\mmatrix\matrix_rotation_matrix.h">
+      <Filter>Header Files\mmatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\mmatrix\mmatrix\mmatrix.h">
+      <Filter>Header Files\mmatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\mmatrix\mmatrix\matrix_3dvector.h">
+      <Filter>Header Files\mmatrix</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

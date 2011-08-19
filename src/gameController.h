@@ -18,19 +18,14 @@
 #include "area.h"
 #include "timer.h"
 
-//#define GC_KEYDOWN 1
-//#define GC_KEYUP 2
-//#define GC_LMOUSE 2
+#include "mmatrix.h"
+#include "matrix_rotation_matrix.h"
+#include "matrix_3dvector.h"
 
 #ifndef GAMECONTROLLER_H_
 #define GAMECONTROLLER_H_
 
 typedef LARGE_INTEGER winlarge;
-
-enum TypeLoop {
-	FIXED_FPS,
-	DYNAMIC_FPS
-};
 
 namespace GController
 {
@@ -40,38 +35,52 @@ namespace GController
 		HINSTANCE hInstance;
 
 		static gameController *selfptr;
+
 		winapiwrapper *window;
 		openglwrapper *opengl;
 		snake *playerSnake;
-		area *curLevel;
 
-		txyz playerPos;
-		txyz fruitPos;
-		txyz direction;
+		Vector3i playerPos;
+		Vector3i fruitPos;
+		Vector3i direction, prevdirection;
+		Vector3f cameraPos;
+
+		Vector3f cameraRot;	//temp variable
+		RotMatrix3f xRelRot;
 
 		bool arrowPressed;
 		bool gamePaused;
 		bool fixCamera;
 		bool animooted;
 		int frames;
-
-		time_t start_tick;
-		time_t end_tick;
-		double frame_time;
+		int cameraframes;
 
 		void spawnFruit(int,int,int); //spawn fruit in range
+		void checkCollision();
+		void setCamera();
+		void drawSnake();
+		void drawFruit();
+
+		void begindraw() {opengl->begindraw();}
+		void enddraw() {opengl->enddraw();}
 
 		Timer loopTimer;
-		TypeLoop fpsUpdateType;
 
 	public:
 		gameController(HINSTANCE hInst);
 		~gameController();
+
 		bool init();
 		void go();
+		void restartGame();
+
 		void mainloop();
 		static bool callBack(int, long, long);
 		void ProcessEvent(int, long, long);
+
 	};
+
+	void loadBand(int n);
+	void waiter(long wticks);
 }
 #endif /* GAMECONTROLLER_H_ */

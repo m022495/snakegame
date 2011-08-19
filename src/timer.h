@@ -7,13 +7,19 @@
 		QueryPerformanceCounter
 		QueryPerformanceFrequency
 
-	twinlarge - LARGE_INTEGER alias. This class uses twinlarge.QuadPart field to store values;
-	start() - starts the timer. returns initial number of the ticks passed after the program start;
-	getTime() - returns the number of ticks passed after the start() method call. 
+	twinlarge
+		LARGE_INTEGER alias. This class uses twinlarge.QuadPart field to store values;
+	start()
+		starts the timer. returns initial number of the ticks passed after the program start;
+	getTime()
+		returns the number of ticks passed after the start() method call. 
 		returned value is LARGE_LONG windows structure;
-	getTimeSec()- returns the time in seconds passed after the start() method call.
-	getTicksRate() - returns number of ticks per second in a LARGE_INTEGER structure;
-	reset() - reset the time passed after  the start() method call;
+	getTimeSec()
+		returns the time in seconds passed after the start() method call.
+	getTicksRate() 
+		returns number of ticks per second in a LARGE_INTEGER structure;
+	reset()
+		reset the time passed after  the start() method call;
 
 */
 
@@ -33,7 +39,6 @@ public:
 		tick1.QuadPart = 0;
 		tick2.QuadPart = 0;
 	}
-	~Timer(void){};
 
 	twinlarge getTime()
 	{

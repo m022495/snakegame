@@ -1,22 +1,13 @@
 #include "snake.h"
 
 
-snake::snake(int x, int y, int z):
+snake::snake(const Vector3i &invector, const Vector3i &playerPos):
 	snakeLength(1),
 		head(0),
 		last(0)
 {
-	crdXYZ speed;
-	
-	speed.x = x;
-	speed.y = y;
-	speed.z = z;
-
 	head = new snakeCell;
-	head->prev = 0;
-	head->next = 0;
-
-	head->move = speed;
+	head->cellGuts.globalpos = playerPos;
 	last = head;
 }
 
@@ -25,33 +16,46 @@ void snake::add()
 	last -> next = new snakeCell;
 	last->next->prev = last;
 	last = last->next;
-	last->move = last->prev->move;
+	last->cellGuts = last->prev->cellGuts;
 	last->next = 0;
 
 	snakeLength++;
 
 }
 
-void snake::move(int x, int y, int z)
+void snake::move(const Vector3i &direction)
 {
 	snakeCell *cell = last;
-	
-	head->move.x = x;
-	head->move.y = y;
-	head->move.z = z;
 
 	while(cell != head) 
 	{
-		cell -> move = cell->prev->move;
+		cell -> cellGuts = cell->prev->cellGuts;
 		cell = cell->prev;
 	}
 
+	head->cellGuts.nextmove = direction;
+	head->cellGuts.globalpos += direction;
+	
 }
 
-
-void snake::move(txyz direction)
+bool snake::searchPos(const Vector3i &invector)
 {
-	move(direction[_IX], direction[_IY], direction[_IZ]);
+
+	const snakeCell *cell = head->next;
+	bool isfound = false;
+
+	while(cell)
+	{
+		if(invector == cell->cellGuts.globalpos)
+		{
+			//std::cout<<"found"<<std::endl;
+			isfound = true;
+			break;
+		}
+		cell = cell->next;
+	}
+
+	return isfound;
 }
 
 void snake::outputSnake() 
@@ -61,8 +65,7 @@ void snake::outputSnake()
 
 	do
 	{
-		std::cout<<i<<": "<<cell->move.x<<" "<<cell->move.y<<" "<<cell->move.z<<std::endl;
-		
+		std::cout<<i<<": "<<cell->cellGuts.globalpos.x()<<" "<<cell->cellGuts.globalpos.y()<<" "<<cell->cellGuts.globalpos.z()<<std::endl;	
 		cell = cell->next;
 		
 		i++;
@@ -77,10 +80,11 @@ snake::~snake(void)
 	snakeCell *temp = 0;
 
 	do
-	{
-		cell = cell->next;
-		temp = cell;
-		delete temp;	
-	} while(cell != 0);
+	{	
+		temp = cell->next;
+		delete cell;
+		cell = temp;
+
+	} while(cell);
 
 }

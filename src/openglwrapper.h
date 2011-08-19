@@ -63,8 +63,8 @@ public:
 	BOOL SetPixelFormat(DWORD dwFlags, BYTE iPixelType, BYTE cColorBits, BYTE cDepthBits);
 	bool CreateContext();
 
-	void drawAxis();
-	void initCamera();
+	void drawAxis(float x, float y, float z);
+	void initCamera(float x, float y, float z);
 	void initSettings();
 
 	void begindraw();
@@ -82,11 +82,13 @@ public:
 
 	void drawCube(GLfloat,GLfloat,GLfloat);
 	void drawCubeCells(int x, int y, int z);
-
 	void drawCubeCellsDelta(int x, int y, int z, float dx, float dy, float dz);
+	void drawCubeCellsDeltaFat(int x, int y, int z, float dx, float dy, float dz, float fat);
 
 	void drawCage(int xs, int ys, int zs);
 	void drawCagePlayer(int xs, int ys, int zs, int ppx, int ppy, int ppz);
+
+	void drawLine(float x1, float y1, float z1, float x2, float y2, float z2);
 
 	void moveSpawn(GLfloat x, GLfloat y, GLfloat z); 
 
