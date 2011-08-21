@@ -92,7 +92,7 @@ public:
 
 	void moveSpawn(GLfloat x, GLfloat y, GLfloat z); 
 
-	void setCamera(GLfloat cx, GLfloat cy, GLfloat cz, GLfloat px, GLfloat py, GLfloat pz, int upx, int upy, int upz);
+	void setCamera(GLfloat cx, GLfloat cy, GLfloat cz, GLfloat px, GLfloat py, GLfloat pz, GLfloat upx, GLfloat upy, GLfloat upz);
 	void setCameraCell(int cx, int cy, int cz, int upx, int upy, int upz);
 	void setCameraCellDelta(int cx, int cy, int cz,
 							float dx, float dy, float dz,

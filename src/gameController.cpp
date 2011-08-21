@@ -9,13 +9,12 @@
 
 #define fixedFPS 60
 #define FRAMES_PER_STEP 12
-#define CAMERA_STEPS 7
+#define CAMERA_STEPS 90
 #define PI 3.1415926536f
 
 #define CAMDEFX 10
 #define CAMDEFY 10
 #define CAMDEFZ 10
-
 
 
 namespace GController
@@ -30,16 +29,19 @@ namespace GController
 				frames(0),
 				arrowPressed(false),
 				gamePaused(false),
-				fixCamera(true),
+				fixCamera(false),
 				animooted(true),
 				direction(1,0,0),
-				prevdirection(direction),
+				//prevdirection(direction),
 				playerPos(0,0,0),
 				fruitPos(-1,-1,-1),
 				cameraPos(CAMDEFX,CAMDEFY,CAMDEFZ),
-				cameraframes(0),
-				cameraRot(0,0,0),
-				xRelRot(0,0,0)
+				//prevCameraPos(cameraPos),
+				cameraframes(CAMERA_STEPS),
+				//cameraRot(0,0,0),
+				xRelRot(0,0,0),
+				prevxRelRot(xRelRot),
+				btnUpPressed(false)
 	{
 
 
@@ -95,13 +97,15 @@ namespace GController
 		playerSnake->add();
 		playerSnake->add();
 
-		spawnFruit(10,10,0);
+		spawnFruit(10,10,10);
 
 		animooted = true;
 		gamePaused = false;
 		fixCamera = false;
 		
 		xRelRot.setAngle(0,0,0);
+		prevxRelRot = xRelRot;
+		cameraframes = CAMERA_STEPS;
 	}
 
 	void gameController::go()
@@ -153,53 +157,59 @@ namespace GController
 
 			switch (param0)
 			{
-				case(VK_UP):
+				case(VK_DOWN):
 					if(!arrowPressed)
 					{
-						
+						prevxRelRot = curRelRot;
 						RotMatrix3f rot_up(0, PI/2, 0);
 						xRelRot = rot_up*xRelRot;	
 						xvect *= xRelRot;
 
 						direction = xvect;
 						
-						cameraframes = 1;
+						cameraframes = 0;
 						arrowPressed = true;
+						btnUpPressed = false;
 					}
 				break;
 
-				case(VK_DOWN):
+				case(VK_UP):
 					if(!arrowPressed)
 					{
+						prevxRelRot = curRelRot;
 						RotMatrix3f rot_down(0, -PI/2, 0);
 						xRelRot = rot_down*xRelRot;	
 						xvect *= xRelRot;
 
 						direction = xvect;
 						
-						cameraframes = 1;
+						cameraframes = 0;
 						arrowPressed = true;
+						btnUpPressed = true;
 					}
 				break;
 
 				case(VK_LEFT):
 					if(!arrowPressed)
 					{
-						
+						prevxRelRot = curRelRot;
+
 						RotMatrix3f rot_left(0, 0, -PI/2);
 						xRelRot = rot_left*xRelRot;	
 						xvect *= xRelRot;
 						
 						direction = xvect;
 
-						cameraframes = 1;
+						cameraframes = 0;
 						arrowPressed = true;
+						btnUpPressed = false;
 					}
 				break;
 
 				case(VK_RIGHT):
 					if(!arrowPressed)
 					{		
+						prevxRelRot = curRelRot;
 
 						RotMatrix3f rot_right(0, 0, PI/2);
 						xRelRot = rot_right*xRelRot;	
@@ -207,8 +217,9 @@ namespace GController
 
 						direction = xvect;
 
-						cameraframes = 1;
+						cameraframes = 0;
 						arrowPressed = true;
+						btnUpPressed = false;
 					}
 
 				break;
@@ -297,69 +308,77 @@ namespace GController
 		drawSnake();
 		drawFruit();
 		opengl->drawAxis(0,0,0);
+		opengl->drawCagePlayer(10,10,10,fruitPos.x()+1,fruitPos.y()+1,fruitPos.z()+1);
 		enddraw();
 	
-		//if(cameraframes  == CAMERA_STEPS)
-			//cameraframes = 0;
 		if(cameraframes  <= CAMERA_STEPS && cameraframes>0)
 			cameraframes++;
 
 		frames++;
-		//cameraframes++;
 	}
 	
 
 	void gameController::setCamera()
 	{
-		
+		//defaults
+		cameraPos.set(-10,0,10);
+		Vector3f zvect(0,0,1);
+
 		if(cameraframes == CAMERA_STEPS)
 		{
-			prevdirection = direction;
-			cameraframes = 0;
+			prevxRelRot = xRelRot;
+			btnUpPressed = false;
 		}
-
+		else
+		{	
+			cameraframes++;
+		}
 		float dfr = (float)frames/FRAMES_PER_STEP;
 		float cfr = (float)cameraframes/CAMERA_STEPS;
+		
+		//rotations
+		if(btnUpPressed)
+			zvect *= xRelRot;
+		else
+			zvect *= prevxRelRot;
 
-		cameraPos.set(-8,0,8);
-		//cameraRot
-		Vector3i zvect(0,0,3);
-
-		zvect *= xRelRot;
-		cameraPos *= xRelRot;
+		curRelRot = xRelRot*cfr + prevxRelRot*(1-cfr);
+		cameraPos *= curRelRot;
 
 		if(!fixCamera)	//(float)frames/FRAMES_PER_STEP
 			opengl->setCamera(	
 									//camera position
-									playerPos.x()+dfr*direction.x()+cameraPos.x(), 
-									playerPos.y()+dfr*direction.y()+cameraPos.y(), 
-									playerPos.z()+dfr*direction.z()+cameraPos.z(), 
+									playerPos.x()+dfr*direction.x()+cameraPos.x()+0.5f, 
+									playerPos.y()+dfr*direction.y()+cameraPos.y()+0.5f, 
+									playerPos.z()+dfr*direction.z()+cameraPos.z()+0.5f, 
 									//aim position
-									playerPos.x()+dfr*direction.x(),
-									playerPos.y()+dfr*direction.y(),
-									playerPos.z()+dfr*direction.z(),
+									playerPos.x()+dfr*direction.x()+0.5f,
+									playerPos.y()+dfr*direction.y()+0.5f,
+									playerPos.z()+dfr*direction.z()+0.5f,
 									//normal to the camera
 									zvect.x(),zvect.y(),zvect.z()
-									//direction.x(), direction.y(), direction.z()
 									);
 
-		opengl->drawLine(
-				playerPos.x()+cameraPos.x()+dfr*direction.x(),
-				playerPos.y()+cameraPos.y()+dfr*direction.y(), 
-				playerPos.z()+cameraPos.z()+dfr*direction.z(),
-				playerPos.x()+dfr*direction.x(),
-				playerPos.y()+dfr*direction.y(),
-				playerPos.z()+dfr*direction.z()
-				);
+		if(fixCamera)
+		{
+			opengl->drawLine(
+					playerPos.x()+cameraPos.x()+dfr*direction.x(),
+					playerPos.y()+cameraPos.y()+dfr*direction.y(), 
+					playerPos.z()+cameraPos.z()+dfr*direction.z(),
+					playerPos.x()+dfr*direction.x(),
+					playerPos.y()+dfr*direction.y(),
+					playerPos.z()+dfr*direction.z()
+					);
 
-		opengl->drawLine(
-				playerPos.x()+cameraPos.x()+dfr*direction.x(),
-				playerPos.y()+cameraPos.y()+dfr*direction.y(), 
-				playerPos.z()+cameraPos.z()+dfr*direction.z(),
-				playerPos.x()+cameraPos.x()+dfr*direction.x()+zvect.x(),
-				playerPos.y()+cameraPos.y()+dfr*direction.y()+zvect.y(),
-				playerPos.z()+cameraPos.z()+dfr*direction.z()+zvect.z()
-		);
+			opengl->drawLine(
+					playerPos.x()+cameraPos.x()+dfr*direction.x(),
+					playerPos.y()+cameraPos.y()+dfr*direction.y(), 
+					playerPos.z()+cameraPos.z()+dfr*direction.z(),
+					playerPos.x()+cameraPos.x()+dfr*direction.x()+zvect.x(),
+					playerPos.y()+cameraPos.y()+dfr*direction.y()+zvect.y(),
+					playerPos.z()+cameraPos.z()+dfr*direction.z()+zvect.z()
+			);
+		}
 	}
 
 	void gameController::drawSnake()
@@ -394,7 +413,7 @@ namespace GController
 		{
 			//add a body cell
 			playerSnake->add();	
-			spawnFruit(10,10,0);
+			spawnFruit(10,10,10);
 		}
 
 		if(playerSnake->searchPos(playerPos))

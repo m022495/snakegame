@@ -190,7 +190,8 @@ void openglwrapper::drawCubeCellsDeltaFat(int x, int y, int z, float dx, float d
 
 }
 
-void openglwrapper::setCamera(GLfloat cx, GLfloat cy, GLfloat cz,  GLfloat px, GLfloat py, GLfloat pz, int upx, int upy, int upz)
+void openglwrapper::setCamera(GLfloat cx, GLfloat cy, GLfloat cz,  GLfloat px, GLfloat py, GLfloat pz,
+			GLfloat upx, GLfloat upy, GLfloat upz)
 {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -276,6 +277,15 @@ void openglwrapper::initCamera(float x, float y, float z)
 
 }
 
+void drawVector(float x, float y, float z)
+{
+	glBegin(GL_LINES);
+
+
+	glEnd();
+
+}
+
 void openglwrapper::drawCage(int xs, int ys, int zs)
 {
 	glColor3f(0.8f,0.8f,0.8f);
@@ -307,7 +317,8 @@ void openglwrapper::drawCage(int xs, int ys, int zs)
 
 void openglwrapper::drawCagePlayer(int xs, int ys, int zs, int ppx, int ppy, int ppz)
 {
-	glColor3f(0.7f,0.5f,0.8f);
+
+	glColor3f(0.8f,0.8f,0.8f);
 	glBegin(GL_LINES);
 	
 	for (int i = ppx-1; i<ppx+1; i++)
