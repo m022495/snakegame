@@ -43,18 +43,28 @@ namespace GController
 		Vector3i playerPos;
 		Vector3i fruitPos;
 		Vector3i direction;
+
 		Vector3f cameraPos;
-		//Vector3f prevCameraPos;
-		//RotMatrix3f cameraRot;	//temp variable
+		Vector3f defCameraPos;
+		Vector3f defCameraNormal;
 
 		RotMatrix3f xRelRot;
 		RotMatrix3f prevxRelRot;
 		RotMatrix3f curRelRot;
 
+		const RotMatrix3f rot_up;
+		const RotMatrix3f rot_down;
+		const RotMatrix3f rot_left;
+		const RotMatrix3f rot_right;
+
 		bool arrowPressed;
 		bool gamePaused;
 		bool fixCamera;
 		bool animooted;
+
+		bool btnUpPressed;
+		bool addOnNextCircle;
+
 		int frames;
 		int cameraframes;
 
@@ -66,8 +76,6 @@ namespace GController
 
 		void begindraw() {opengl->begindraw();}
 		void enddraw() {opengl->enddraw();}
-
-		bool btnUpPressed;
 
 		Timer loopTimer;
 

@@ -35,19 +35,8 @@ private:
 	GLfloat fval;
 	GLfloat fzoom;
 
-	//opengl verticies
-
-	static GLfloat cube_verticies[];
-	static GLfloat cubeEdge;
 	static GLfloat cellSize;
-
-	static GLubyte frontIndicies[];
-	static GLubyte leftIndicies[];
-	static GLubyte rightIndicies[];
-	static GLubyte botIndicies[];
-	static GLubyte topIndicies[];
-	static GLubyte backIndicies[];
-
+	GLfloat *defCubeVertices;
 	//methods
 
 public:
@@ -97,6 +86,16 @@ public:
 	void setCameraCellDelta(int cx, int cy, int cz,
 							float dx, float dy, float dz,
 							int upx, int upy, int upz);
+
+	void setCubeVertices(GLfloat *verts, GLfloat edge);
+
+	//opengl verticies
+	static const GLubyte frontIndicies[];
+	static const GLubyte leftIndicies[];
+	static const GLubyte rightIndicies[];
+	static const GLubyte botIndicies[];
+	static const GLubyte topIndicies[];
+	static const GLubyte backIndicies[];
 
 };
 

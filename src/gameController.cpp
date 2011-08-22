@@ -7,15 +7,14 @@
 #include <iostream>
 #include "gameController.h"
 
-#define fixedFPS 60
-#define FRAMES_PER_STEP 12
-#define CAMERA_STEPS 90
-#define PI 3.1415926536f
+#define fixedFPS 60	//game fps
+#define FRAMES_PER_STEP 12	//specifies how many frames it takes to move between cells
+#define CAMERA_STEPS 90		//frames it takes for the full camera rotation while turning the snake
+#define PI 3.1415926536f	//just PI
 
-#define CAMDEFX 10
+#define CAMDEFX 10			//the camera's default position when it's fixed
 #define CAMDEFY 10
 #define CAMDEFZ 10
-
 
 namespace GController
 {
@@ -28,25 +27,30 @@ namespace GController
 				opengl(0),
 				frames(0),
 				arrowPressed(false),
-				gamePaused(false),
-				fixCamera(false),
-				animooted(true),
-				direction(1,0,0),
-				//prevdirection(direction),
-				playerPos(0,0,0),
+				gamePaused(false),	// is game paused
+				fixCamera(false),	// is camera fix or not(follows the snake)
+				animooted(true),	// smooth moving or cell by cell moving
+				direction(1,0,0),	// init moving direction
+				playerPos(0,0,0),	// init playerPos
 				fruitPos(-1,-1,-1),
 				cameraPos(CAMDEFX,CAMDEFY,CAMDEFZ),
-				//prevCameraPos(cameraPos),
+				defCameraPos(-4,0,10),	//the default camera's position relating to the snake's head
+				defCameraNormal(0,0,1),	//a normal to the, default (0,0,1)
 				cameraframes(CAMERA_STEPS),
-				//cameraRot(0,0,0),
-				xRelRot(0,0,0),
+				xRelRot(0,0,0),			//snake ingame rotation relating to (1,0,0) vector
 				prevxRelRot(xRelRot),
-				btnUpPressed(false)
+				btnUpPressed(false),	//some bad ways to make the camera rotation more sense
+				addOnNextCircle(false),	//some bad ways for a food moving inside the snake
+
+				rot_up(0, PI/2, 0),		//default rotation matrices
+				rot_down(0, -PI/2, 0),
+				rot_left(0, 0, -PI/2),
+				rot_right(0, 0, PI/2)
 	{
 
 
 		selfptr = this;
-	//	srand (time((time_t)NULL));
+		srand (time((time_t)NULL));
 	}
 
 	gameController::~gameController()
@@ -55,6 +59,7 @@ namespace GController
 		delete opengl;
 	}
 
+	//init a window, spawn the snake
 	bool gameController::init()
 	{
 		window = new winapiwrapper(hInstance);
@@ -85,6 +90,7 @@ namespace GController
 
 	}
 
+	//restarting the game
 	void gameController::restartGame()
 	{
 		delete playerSnake;
@@ -160,14 +166,16 @@ namespace GController
 				case(VK_DOWN):
 					if(!arrowPressed)
 					{
+						//rotate the current direction vector, compute the general rotation matrix 'xRelRot'
 						prevxRelRot = curRelRot;
-						RotMatrix3f rot_up(0, PI/2, 0);
 						xRelRot = rot_up*xRelRot;	
 						xvect *= xRelRot;
 
 						direction = xvect;
-						
+
+						//by setting 'cameraframes' to 0 start the camera animation
 						cameraframes = 0;
+
 						arrowPressed = true;
 						btnUpPressed = false;
 					}
@@ -177,7 +185,7 @@ namespace GController
 					if(!arrowPressed)
 					{
 						prevxRelRot = curRelRot;
-						RotMatrix3f rot_down(0, -PI/2, 0);
+
 						xRelRot = rot_down*xRelRot;	
 						xvect *= xRelRot;
 
@@ -193,14 +201,12 @@ namespace GController
 					if(!arrowPressed)
 					{
 						prevxRelRot = curRelRot;
-
-						RotMatrix3f rot_left(0, 0, -PI/2);
 						xRelRot = rot_left*xRelRot;	
 						xvect *= xRelRot;
-						
-						direction = xvect;
 
+						direction = xvect;
 						cameraframes = 0;
+
 						arrowPressed = true;
 						btnUpPressed = false;
 					}
@@ -210,36 +216,30 @@ namespace GController
 					if(!arrowPressed)
 					{		
 						prevxRelRot = curRelRot;
-
-						RotMatrix3f rot_right(0, 0, PI/2);
 						xRelRot = rot_right*xRelRot;	
 						xvect *= xRelRot;
 
 						direction = xvect;
 
+
 						cameraframes = 0;
+
 						arrowPressed = true;
 						btnUpPressed = false;
 					}
 
 				break;
 
-				case(VK_HOME):
-					direction.set(0,1,0);
-				break;
-
-				case(VK_END):
-					direction.set(0,-1,0);
-				break;
-
 				case(VK_SPACE):
 					animooted = !animooted;
 				break;
 
+				//'a'
 				case(0x41):
 					playerSnake->add();
 				break;
 
+				//'c'
 				case(0x43):
 					if(!fixCamera) 
 					{
@@ -285,10 +285,11 @@ namespace GController
 
 	void gameController::mainloop()
 	{
-
+		//1 step = 1 move between cells
 		if (frames == FRAMES_PER_STEP)
 		{ 
 			//current head position = previos + current moving direction
+			//move the tail and check collisions, also animate food moving (bad)
 			if(!gamePaused)
 			{
 				playerPos += direction;	
@@ -300,10 +301,8 @@ namespace GController
 			arrowPressed = false;
 		}
 			
-				//drawing the frame here
-		
+		//drawing the frame here
 		begindraw();
-
 		setCamera();
 		drawSnake();
 		drawFruit();
@@ -311,18 +310,17 @@ namespace GController
 		opengl->drawCagePlayer(10,10,10,fruitPos.x()+1,fruitPos.y()+1,fruitPos.z()+1);
 		enddraw();
 	
-		if(cameraframes  <= CAMERA_STEPS && cameraframes>0)
+		if(cameraframes  < CAMERA_STEPS)
 			cameraframes++;
 
 		frames++;
 	}
-	
 
 	void gameController::setCamera()
 	{
 		//defaults
-		cameraPos.set(-10,0,10);
-		Vector3f zvect(0,0,1);
+		cameraPos = defCameraPos;
+		Vector3f zvect(defCameraNormal);
 
 		if(cameraframes == CAMERA_STEPS)
 		{
@@ -333,19 +331,21 @@ namespace GController
 		{	
 			cameraframes++;
 		}
+
 		float dfr = (float)frames/FRAMES_PER_STEP;
 		float cfr = (float)cameraframes/CAMERA_STEPS;
 		
-		//rotations
+		//rotations, should rework this place
 		if(btnUpPressed)
 			zvect *= xRelRot;
 		else
 			zvect *= prevxRelRot;
 
+		//the current rotations angles are the weighted sum of the previous rotation and the next rotation angles
 		curRelRot = xRelRot*cfr + prevxRelRot*(1-cfr);
 		cameraPos *= curRelRot;
 
-		if(!fixCamera)	//(float)frames/FRAMES_PER_STEP
+		if(!fixCamera)	
 			opengl->setCamera(	
 									//camera position
 									playerPos.x()+dfr*direction.x()+cameraPos.x()+0.5f, 
@@ -384,37 +384,50 @@ namespace GController
 	void gameController::drawSnake()
 	{
 
-		//draw snake body
+		//draw the snake's body
 		Vector3i prev(playerPos);
 		const snakeCell *next = playerSnake->getHead();
 
-		//go thru the linked list
+		//go thru a linked list
 		while(next)
 		{
 			prev -= next->cellGuts.nextmove;
 
 			//draw each body part
-			opengl->drawCubeCellsDelta(
+			opengl->drawCubeCellsDeltaFat(
 					prev.x(),
 					prev.y(),
 					prev.z(),
 					next->cellGuts.nextmove.x()*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),	//animate if enabled
 					next->cellGuts.nextmove.y()*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
-					next->cellGuts.nextmove.z()*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0)
+					next->cellGuts.nextmove.z()*(float)frames/FRAMES_PER_STEP * ((animooted)?1.0f:0),
+					next->cellGuts.fat
 				);
 
 			next = playerSnake->getNext(next);
 		}
 	}
 
-		void gameController::checkCollision()
-	{
+
+	//check collisions and animate how a food moves thru the snake (should make a different function)
+	void gameController::checkCollision()
+	{	
 		if(playerPos == fruitPos)
 		{
-			//add a body cell
-			playerSnake->add();	
+			playerSnake->setHeadFat(1.26f);
 			spawnFruit(10,10,10);
 		}
+		else
+			playerSnake->setHeadFat(1.0f);
+
+		if(addOnNextCircle)
+		{
+			playerSnake->add();
+			addOnNextCircle = false;
+		}
+
+		if(playerSnake->getLast()->cellGuts.fat > 1.0f)
+			addOnNextCircle = true;
 
 		if(playerSnake->searchPos(playerPos))
 		{
@@ -423,9 +436,6 @@ namespace GController
 			animooted = false;
 			fixCamera = true;
 		}
-
-		//playerSnake->outputSnake();
-		//
 	}
 
 	void gameController::drawFruit()

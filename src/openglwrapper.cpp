@@ -15,28 +15,14 @@
 
 using namespace std;
 
-//вершины куба
-GLfloat openglwrapper::cube_verticies[] = {		
-			-CUBE_EDGE,-CUBE_EDGE,-CUBE_EDGE,
-			-CUBE_EDGE,-CUBE_EDGE,CUBE_EDGE,
-			CUBE_EDGE,-CUBE_EDGE,CUBE_EDGE, 
-			CUBE_EDGE,-CUBE_EDGE,-CUBE_EDGE, 
-			-CUBE_EDGE,CUBE_EDGE,-CUBE_EDGE, 
-			CUBE_EDGE,CUBE_EDGE,-CUBE_EDGE,
-			CUBE_EDGE,CUBE_EDGE,CUBE_EDGE,  
-			-CUBE_EDGE,CUBE_EDGE,CUBE_EDGE, 
-};
+const GLubyte openglwrapper::frontIndicies[] = {0, 1, 2, 3};
+const GLubyte openglwrapper::leftIndicies[] = {0, 4, 7, 1};
+const GLubyte openglwrapper::rightIndicies[] = {3, 2, 6, 5};
+const GLubyte openglwrapper::botIndicies[] = {0, 3, 5, 4};
+const GLubyte openglwrapper::topIndicies[] = {1, 7, 6, 2};
+const GLubyte openglwrapper::backIndicies[] = {6, 7, 4, 5};
 
-GLfloat openglwrapper::cubeEdge = CUBE_EDGE;
 GLfloat openglwrapper::cellSize = CELL_SIZE;
-
-//индексы
-GLubyte openglwrapper::frontIndicies[] = {0, 1, 2, 3};
-GLubyte openglwrapper::leftIndicies[] = {0, 4, 7, 1};
-GLubyte openglwrapper::rightIndicies[] = {3, 2, 6, 5};
-GLubyte openglwrapper::botIndicies[] = {0, 3, 5, 4};
-GLubyte openglwrapper::topIndicies[] = {1, 7, 6, 2};
-GLubyte openglwrapper::backIndicies[] = {6, 7, 4, 5};
 
 //инициализация указателя на реализацию класса. Поэтому реализация ограничивается одним объектом openglwrapper.
 openglwrapper *openglwrapper::selfptr = NULL;
@@ -51,16 +37,20 @@ openglwrapper::openglwrapper(HDC hDC):
 						switched2(false),
 						inited(false),
 						fval(-1.0f),
-						fzoom(1.0f)
+						fzoom(1.0f),
+						defCubeVertices(0)
 {
 	this->hDC = hDC;
 	selfptr = this;
-
+	
+	defCubeVertices = new GLfloat[24];
+	setCubeVertices(defCubeVertices, CUBE_EDGE);
+	defCubeVertices;
 }
 
 openglwrapper::~openglwrapper()
 {
-
+	delete[] defCubeVertices;
 }
 
 BOOL openglwrapper::SetPixelFormat()
@@ -132,11 +122,9 @@ bool openglwrapper::CreateContext()
 
 void openglwrapper::begindraw()
 {
-
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnableClientState(GL_VERTEX_ARRAY);	
-	glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, &cube_verticies[0]);
-
+	glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, defCubeVertices);
 }
 
 void openglwrapper::enddraw()
@@ -176,18 +164,25 @@ void openglwrapper::drawCubeCells(int x, int y, int z)
 
 void openglwrapper::drawCubeCellsDelta(int x, int y, int z, float dx, float dy, float dz)
 {
+
 		drawCube((float)x*cellSize +(float)cellSize/2 +(float)dx*cellSize, 
 				 (float)y*cellSize +(float)cellSize/2 +(float)dy*cellSize, 
 				(float)z*cellSize +(float)cellSize/2 +(float)dz*cellSize);
-
 }
 
 void openglwrapper::drawCubeCellsDeltaFat(int x, int y, int z, float dx, float dy, float dz, float fat)
 {
+
+		GLfloat *vertices = new GLfloat[24];
+		setCubeVertices(vertices, CUBE_EDGE*fat);
+		glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, vertices);
+
 		drawCube((float)x*cellSize +(float)cellSize/2 +(float)dx*cellSize, 
 				 (float)y*cellSize +(float)cellSize/2 +(float)dy*cellSize, 
 				(float)z*cellSize +(float)cellSize/2 +(float)dz*cellSize);
 
+		delete[] vertices;
+		glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, defCubeVertices);
 }
 
 void openglwrapper::setCamera(GLfloat cx, GLfloat cy, GLfloat cz,  GLfloat px, GLfloat py, GLfloat pz,
@@ -240,11 +235,13 @@ void openglwrapper::setCameraCellDelta(int cx, int cy, int cz, float dx, float d
 
 void openglwrapper::drawCube(GLfloat x, GLfloat y, GLfloat z)
 {
+
 	glPushMatrix();
 
 	glTranslatef(x,y,z);
 
 	glColor3f(0.7f, 0.7f, 0);
+
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, frontIndicies);
 	glColor3f(0.3f, 0, 1.0f);
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, leftIndicies);
@@ -349,17 +346,20 @@ void openglwrapper::drawAxis(float x, float y, float z)
 {
 	glBegin(GL_LINES);
 
-	glColor3f(1.0,0,0);	//red x
-	glVertex3d(x-5,y,z);
-	glVertex3d(x+5,y,z);
+	//glColor3f(1.0,0,0);	//red x
+	glColor3f(0.8f,0.8f,0.8f);	
+	glVertex3d(x-50,y,z);
+	glVertex3d(x+50,y,z);
 
-	glColor3f(0,1.0,0);	//green y
-	glVertex3d(x,y-5,z);
-	glVertex3d(x,y+5,z);
+	//glColor3f(0,1.0,0);	//green y
+	glColor3f(0.5f,0.5f,0.5f);	
+	glVertex3d(x,y-50,z);
+	glVertex3d(x,y+50,z);
 
-	glColor3f(0,0,1.0);	//blue z
-	glVertex3d(x,y,z-5);
-	glVertex3d(x,y,z+5);
+	//glColor3f(0,0,1.0);	//blue z
+	glColor3f(0.4f,0.4f,0.3f);	
+	glVertex3d(x,y,z-50);
+	glVertex3d(x,y,z+50);
 
 	glEnd();
 
@@ -447,4 +447,17 @@ bool openglwrapper::DisableOpenGL()
 	 hWnd = 0;
 	 hDC = 0;
 	return true;
+}
+
+void openglwrapper::setCubeVertices(GLfloat *verts, GLfloat edge)
+{
+	verts[0]= -edge;verts[1]= -edge;verts[2]= -edge;
+	verts[3]=	-edge;verts[4]=	-edge;verts[5]=	edge;
+	verts[6]=	edge;verts[7]=	-edge;verts[8]=	edge;
+	verts[9]=	edge;verts[10]=	-edge;verts[11]=	-edge; 
+	verts[12]=	-edge;verts[13]=	edge;verts[14]=	-edge; 
+	verts[15]=	edge;verts[16]=	edge;verts[17]=	-edge;
+	verts[18]=	edge;verts[19]=	edge;verts[20]=	edge; 
+	verts[21]=	-edge;verts[22]=	edge;verts[23]=	edge;
+
 }

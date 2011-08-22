@@ -20,7 +20,6 @@ void snake::add()
 	last->next = 0;
 
 	snakeLength++;
-
 }
 
 void snake::move(const Vector3i &direction)
@@ -35,7 +34,7 @@ void snake::move(const Vector3i &direction)
 
 	head->cellGuts.nextmove = direction;
 	head->cellGuts.globalpos += direction;
-	
+
 }
 
 bool snake::searchPos(const Vector3i &invector)
@@ -48,7 +47,6 @@ bool snake::searchPos(const Vector3i &invector)
 	{
 		if(invector == cell->cellGuts.globalpos)
 		{
-			//std::cout<<"found"<<std::endl;
 			isfound = true;
 			break;
 		}
@@ -56,6 +54,16 @@ bool snake::searchPos(const Vector3i &invector)
 	}
 
 	return isfound;
+}
+
+//'interface' for a 'fat' propertie
+void snake::setHeadFat(float fat)
+{
+	head->setFat(fat);
+}
+void snake::setLastFat(float fat)
+{
+	last->setFat(fat);
 }
 
 void snake::outputSnake() 
