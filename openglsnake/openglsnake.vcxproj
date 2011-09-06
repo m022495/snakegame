@@ -15,6 +15,7 @@
     <ClInclude Include="..\..\mmatrix\mmatrix\matrix_container.h" />
     <ClInclude Include="..\..\mmatrix\mmatrix\matrix_rotation_matrix.h" />
     <ClInclude Include="..\..\mmatrix\mmatrix\mmatrix.h" />
+    <ClInclude Include="..\..\openALstudies\openALstudies\openALwrapper.h" />
     <ClInclude Include="..\src\area.h" />
     <ClInclude Include="..\src\datatype.h" />
     <ClInclude Include="..\src\gameController.h" />
@@ -26,6 +27,7 @@
     <ClInclude Include="..\src\wrapperkeys.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\openALstudies\openALstudies\openALwrapper.cpp" />
     <ClCompile Include="..\src\area.cpp" />
     <ClCompile Include="..\src\gameController.cpp" />
     <ClCompile Include="..\src\maintest.cpp" />
@@ -65,14 +67,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openglsnake\openglsnake;$(IncludePath)</IncludePath>
-    <SourcePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openglsnake\openglsnake;$(SourcePath)</SourcePath>
+    <IncludePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openglsnake\openglsnake;C:\game\dev\openALstudies\openALstudies;C:\openal\include;$(IncludePath)</IncludePath>
+    <SourcePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openglsnake\openglsnake;C:\game\dev\openALstudies\openALstudies;$(SourcePath)</SourcePath>
+    <LibraryPath>C:\openal\libs\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\game\dev\mmatrix\mmatrix;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <SourcePath>$(SourcePath)</SourcePath>
+    <SourcePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openALstudies\openALstudies;$(SourcePath)</SourcePath>
+    <IncludePath>C:\game\dev\mmatrix\mmatrix;C:\game\dev\openglsnake\openglsnake;C:\openal\include;C:\game\dev\openALstudies\openALstudies;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\openal\libs\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -81,11 +84,11 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <PreprocessorDefinitions>_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CONSOLE;_OPENAL_DEBUG_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;OpenAL32.lib;alut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <RegisterOutput>false</RegisterOutput>
       <EntryPointSymbol>WinMain</EntryPointSymbol>
@@ -102,7 +105,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;OpenAL32.lib;alut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <EntryPointSymbol>WinMain</EntryPointSymbol>
     </Link>

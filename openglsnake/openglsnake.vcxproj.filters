@@ -16,6 +16,9 @@
     <Filter Include="Header Files\mmatrix">
       <UniqueIdentifier>{270bc532-e206-4291-b167-0c8311d8e9eb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\openAL">
+      <UniqueIdentifier>{33be4063-c43b-4424-addb-e4e8c4eeb27d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\area.h">
@@ -57,6 +60,9 @@
     <ClInclude Include="..\..\mmatrix\mmatrix\matrix_3dvector.h">
       <Filter>Header Files\mmatrix</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\openALstudies\openALstudies\openALwrapper.h">
+      <Filter>Source Files\openAL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\area.cpp">
@@ -82,6 +88,9 @@
     </ClCompile>
     <ClCompile Include="..\src\winapiwrapper.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\openALstudies\openALstudies\openALwrapper.cpp">
+      <Filter>Source Files\openAL</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

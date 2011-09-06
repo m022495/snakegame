@@ -70,6 +70,10 @@ public:
 	void downZoom(GLfloat step){fzoom-=step/100;}
 
 	void drawCube(GLfloat,GLfloat,GLfloat);
+	
+	void drawCubeBlack(GLfloat,GLfloat,GLfloat);
+	void drawCubeCellsDeltaFatBlack(int x, int y, int z, float dx, float dy, float dz, float fat);
+
 	void drawCubeCells(int x, int y, int z);
 	void drawCubeCellsDelta(int x, int y, int z, float dx, float dy, float dz);
 	void drawCubeCellsDeltaFat(int x, int y, int z, float dx, float dy, float dz, float fat);

@@ -257,6 +257,52 @@ void openglwrapper::drawCube(GLfloat x, GLfloat y, GLfloat z)
 	glPopMatrix();
 }
 
+//TEMP TEMP TEMP TEMP TEMP
+void openglwrapper::drawCubeCellsDeltaFatBlack(int x, int y, int z, float dx, float dy, float dz, float fat)
+{
+
+		GLfloat *vertices = new GLfloat[24];
+		setCubeVertices(vertices, CUBE_EDGE*fat);
+		glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, vertices);
+
+		drawCubeBlack((float)x*cellSize +(float)cellSize/2 +(float)dx*cellSize, 
+				 (float)y*cellSize +(float)cellSize/2 +(float)dy*cellSize, 
+				(float)z*cellSize +(float)cellSize/2 +(float)dz*cellSize);
+
+		delete[] vertices;
+		glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, defCubeVertices);
+}
+
+void openglwrapper::drawCubeBlack(GLfloat x, GLfloat y, GLfloat z)
+{
+
+	glPushMatrix();
+
+	glTranslatef(x,y,z);
+
+	//glColor3f(0.7f, 0.7f, 0.8f);
+	glColor3f(0.2f, 0.2f, 0.1f);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, frontIndicies);
+	//glColor3f(0.8f, 0.9f, 1.0f);
+	glColor3f(0.1f, 0.2f, 0.3f);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, leftIndicies);
+	//glColor3f(1.0f, 0.7f, 1.0f);
+	glColor3f(0.1f, 0.5f, 0.2f);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, rightIndicies);
+	//glColor3f(0.9f, 1.0f, 0.9f);
+	glColor3f(0.1f, 0.2f, 0.1f);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, botIndicies);
+	//glColor3f(0.8f, 0.8f, 0.8f);
+	glColor3f(0.2f, 0.3f, 0.1f);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, topIndicies);
+	//glColor3f(0.9f, 0.8f, 0.9f);
+	glColor3f(0.1f, 0.2f, 0.2f);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, backIndicies);
+
+	glPopMatrix();
+}
+
+
 void openglwrapper::moveSpawn(GLfloat x, GLfloat y, GLfloat z)
 {
 	glTranslatef(x,y,z);
@@ -267,7 +313,8 @@ void openglwrapper::initCamera(float x, float y, float z)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glFrustum(-1.0, 1.0, -1.0, 1.0, 1, 100.0);
-		
+	glViewport(0, 0, (GLsizei) 800, (GLsizei) 800);
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	gluLookAt (x, y, z,    0, 0, 0,    0.0, 0.0, 1.0);
@@ -315,19 +362,19 @@ void openglwrapper::drawCage(int xs, int ys, int zs)
 void openglwrapper::drawCagePlayer(int xs, int ys, int zs, int ppx, int ppy, int ppz)
 {
 
-	glColor3f(0.8f,0.8f,0.8f);
+	glColor3f(0.9f,0.9f,0.9f);
 	glBegin(GL_LINES);
 	
 	for (int i = ppx-1; i<ppx+1; i++)
 	{
 		for(int j=ppy-1; j<ppy+1; j++)
 		{
-			glVertex3f(i*cellSize,j*cellSize,0);
+			glVertex3f(i*cellSize,j*cellSize,-zs*cellSize);
 			glVertex3f(i*cellSize,j*cellSize,zs*cellSize);
 		}
 		for(int k=ppz-1; k<ppz+1; k++)
 		{
-			glVertex3f(i*cellSize,0,k*cellSize);
+			glVertex3f(i*cellSize,-ys*cellSize,k*cellSize);
 			glVertex3f(i*cellSize,ys*cellSize,k*cellSize);
 		}
 	}
@@ -335,7 +382,7 @@ void openglwrapper::drawCagePlayer(int xs, int ys, int zs, int ppx, int ppy, int
 	{
 		for(int k=ppz-1; k<ppz+1; k++)
 		{
-			glVertex3f(0,j*cellSize,k*cellSize);
+			glVertex3f(-xs*cellSize,j*cellSize,k*cellSize);
 			glVertex3f(xs*cellSize,j*cellSize,k*cellSize);
 		}
 	}
